@@ -3,6 +3,7 @@ import datetime
 from appium import webdriver
 from appium.webdriver.common.touch_action import TouchAction
 from appium.webdriver.common.appiumby import AppiumBy
+from selenium.webdriver.common.action_chains import ActionChains
 from google.oauth2 import service_account
 import pandas as pd
 import gspread
@@ -16,7 +17,7 @@ scopes = ['https://spreadsheets.google.com/feeds',
 credentials = service_account.Credentials.from_service_account_file(
     'service-account-credentials.json', scopes=scopes)
 
-if arguments[1] == "shoes":
+if arguments[1] in ['common', 'uncommon', 'rare']:
     df = [['type', '', 'ID', 'mint', 'Lv', 'price']]
 elif arguments[1] == "gem":
     df = [['ID', 'price', 'Lv', 'mint']]
@@ -46,13 +47,17 @@ def login(driver):
 
 
 def filter(driver):
-    if arguments[1] == "shoes":
+    if arguments[1] in ['common', 'uncommon', 'rare']:
         el = driver.find_element(
             by=AppiumBy.XPATH, value="/hierarchy/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.widget.FrameLayout/android.widget.FrameLayout/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View/android.view.View/android.widget.ImageView[2]")
         el.click()
         time.sleep(2)
         el = driver.find_element(
             by=AppiumBy.ACCESSIBILITY_ID, value='Sneakers')
+        el.click()
+        time.sleep(2)
+        el = driver.find_element(
+            by=AppiumBy.ACCESSIBILITY_ID, value=arguments[1].capitalize())
         el.click()
         time.sleep(2)
         el = driver.find_element(
@@ -87,6 +92,7 @@ def scroll_down_loop(driver):
     # for i in range(5): -> test
     while True:
         scraping(driver)
+        # TODO: Deprecated
         TouchAction(driver).long_press(x=300, y=window_height - 250).move_to(
             x=300, y=max(window_height - 250 - scroll_distance, 250)).release().perform()
         try:
@@ -112,13 +118,13 @@ def open_market(driver):
     filter(driver)
 
 
-def print_progress():
-    print(f'{datetime.datetime.now().strftime("%H:%M:%S")}')
+def print_progress(msg):
+    print(f'{msg}: {datetime.datetime.now().strftime("%H:%M:%S")}')
 
 
 def scraping(driver):
     global df
-    if arguments[1] == "shoes":
+    if arguments[1] in ['common', 'uncommon', 'rare']:
         els = driver.find_elements(
             by=AppiumBy.XPATH, value="//*[starts-with(@content-desc,'100')]")
     elif arguments[1] == "box":
@@ -136,8 +142,8 @@ def update_ss(df):
     df = df.drop_duplicates()
     gc = gspread.authorize(credentials)
     wb = gc.open_by_key('1-qTgzHxuVysoq-XIIbB7WdsDjRfjEYBzKrAydjZRDcs')
-    if arguments[1] == "shoes":
-        ws = wb.worksheet('db_shoes')
+    if arguments[1] in ['common', 'uncommon', 'rare']:
+        ws = wb.worksheet(f'db_{arguments[1]}')
     elif arguments[1] == "box":
         ws = wb.worksheet('db_box')
     elif arguments[1] == "gem":
@@ -147,14 +153,14 @@ def update_ss(df):
 
 
 if __name__ == "__main__":
-    if len(arguments) == 2 and arguments[1] in ['shoes', 'gem', 'box']:
-        print('Start: ' + datetime.datetime.now().strftime('%H:%M:%S'))
+    if len(arguments) == 2 and arguments[1] in ['common', 'uncommon', 'rare', 'gem', 'box']:
+        print_progress('start')
         driver = setup_appium()
         login(driver)
         open_market(driver)
         scroll_down_loop(driver)
         update_ss(df)
         driver.terminate_app('com.bcy.fsapp')
-        print('End: ' + datetime.datetime.now().strftime('%H:%M:%S'))
+        print_progress('end')
     else:
-        print("Usage: stepn-scraping.py [shoes/gem]")
+        print("Usage: stepn-scraping.py [common/uncommon/rare/box/gem]")
