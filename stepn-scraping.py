@@ -20,6 +20,8 @@ if arguments[1] == "shoes":
     df = [['type', '', 'ID', 'mint', 'Lv', 'price']]
 elif arguments[1] == "gem":
     df = [['ID', 'price', 'Lv', 'mint']]
+elif arguments[1] == "box":
+    df = [['rarity', '', 'ID', 'price']]
 
 
 def setup_appium():
@@ -51,6 +53,19 @@ def filter(driver):
         time.sleep(2)
         el = driver.find_element(
             by=AppiumBy.ACCESSIBILITY_ID, value='Sneakers')
+        el.click()
+        time.sleep(2)
+        el = driver.find_element(
+            by=AppiumBy.ACCESSIBILITY_ID, value='CONFIRM')
+        el.click()
+        time.sleep(2)
+    elif arguments[1] == "box":
+        el = driver.find_element(
+            by=AppiumBy.XPATH, value="/hierarchy/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.widget.FrameLayout/android.widget.FrameLayout/android.view.View/android.view.View/android.view.View/android.view.View[2]/android.view.View/android.view.View/android.widget.ImageView[2]")
+        el.click()
+        time.sleep(2)
+        el = driver.find_element(
+            by=AppiumBy.ACCESSIBILITY_ID, value='Shoeboxes')
         el.click()
         time.sleep(2)
         el = driver.find_element(
@@ -106,6 +121,9 @@ def scraping(driver):
     if arguments[1] == "shoes":
         els = driver.find_elements(
             by=AppiumBy.XPATH, value="//*[starts-with(@content-desc,'100')]")
+    elif arguments[1] == "box":
+        els = driver.find_elements(
+            by=AppiumBy.XPATH, value="//*[contains(@content-desc,'shoebox')]")
     elif arguments[1] == "gem":
         els = driver.find_elements(
             by=AppiumBy.XPATH, value="//*[starts-with(@content-desc,'#')]")
@@ -120,6 +138,8 @@ def update_ss(df):
     wb = gc.open_by_key('1-qTgzHxuVysoq-XIIbB7WdsDjRfjEYBzKrAydjZRDcs')
     if arguments[1] == "shoes":
         ws = wb.worksheet('db_shoes')
+    elif arguments[1] == "box":
+        ws = wb.worksheet('db_box')
     elif arguments[1] == "gem":
         ws = wb.worksheet('db_gem')
     ws.clear()
@@ -127,7 +147,7 @@ def update_ss(df):
 
 
 if __name__ == "__main__":
-    if len(arguments) == 2 and arguments[1] in ['shoes', 'gem']:
+    if len(arguments) == 2 and arguments[1] in ['shoes', 'gem', 'box']:
         print('Start: ' + datetime.datetime.now().strftime('%H:%M:%S'))
         driver = setup_appium()
         login(driver)
