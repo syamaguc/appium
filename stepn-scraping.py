@@ -154,7 +154,7 @@ if __name__ == "__main__":
         open_market(driver)
         scroll_down_loop(driver)
         update_ss(df)
-        driver.close_app()
+        driver.terminate_app('com.bcy.fsapp')
         print('End: ' + datetime.datetime.now().strftime('%H:%M:%S'))
     else:
         print("Usage: stepn-scraping.py [shoes/gem]")
